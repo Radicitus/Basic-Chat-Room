@@ -26,7 +26,8 @@ while True:
                     s.close()
             else:
                 cli.send(input().encode())
-    except KeyboardInterrupt:
-        print()
+    except:
+        print("PROGRAM EXIT")
+        cli.close()
         sys.exit()
 
