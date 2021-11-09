@@ -17,23 +17,26 @@ while True:
     cli_args = sys.argv
     host, port = cli_args[1], cli_args[2]
 
-    # User counter
-    users = []
-
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    sock.bind((host, port))
+    srv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    srv.bind((host, port))
+    srv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
     print("Chat Server started on port ", port)
 
-    sock.listen(5)
-    connection, address = sock.accept()
+    srv.listen(5)
+
+    # User variables
+    incoming = [srv]
+    outgoing = []
+    message_queue = {}
+
+    connection, address = srv.accept()
     with connection:
         users += 1
         printUserCount(users)
 
         while True:
-            data = sock.recv(1024)
+            data = srv.recv(1024)
             print("[", connection, "] ", str(data))
             if not data:
                 users -= 1
