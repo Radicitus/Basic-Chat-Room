@@ -3,42 +3,46 @@ import socket
 import sys
 
 
-def printUserCount(users):
-    if len(users) > 1:
-        print("> New user ", address, "entered (", len(users), " users online)")
+def printUserCount(c, cli):
+    if len(c) > 1:
+        print("> New user ", cli.getsockname(), "entered (", len(c), " users online)")
     else:
-        print("> New user ", address, "entered (", len(users), " user online)")
+        print("> New user ", cli.getsockname(), "entered (", len(c), " user online)")
 
+
+# Take Host IP and Port # from cli arguments
+if len(sys.argv) != 3:
+    raise Exception("ERROR! Usage: script, IP addr, Port #")
+cli_args = sys.argv
+host, port = str(cli_args[1]), int(cli_args[2])
+srv_addr = (host, port)
+
+srv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+srv.bind(srv_addr)
+srv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+
+print("Chat Server started on port", port)
+
+# Client vars
+connections = [srv]
 
 while True:
-    # Take Host IP and Port # from cli arguments
-    if len(sys.argv) > 3:
-        raise Exception("ERROR! Usage: script, IP addr, Port #")
-    cli_args = sys.argv
-    host, port = cli_args[1], cli_args[2]
+    sr, sw, se = select.select(connections, [], [])
+    print(sr)
+    for s in sr:
+        if s is srv:
+            connection, address = s.accept()
+            connections.append(connection)
+        else:
+            data = s.recv(1024)
+            if data:
+                for c in connections:
+                    if c is not srv and c is not s:
+                        message = "[" + str(s.getsockname()[0]) + ":" + str(s.getsockname[1]) + "] " + str(data)
+                        c.send(bytes(message))
+            else:
+                connections.remove(s)
+                s.close()
 
-    srv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    srv.bind((host, port))
-    srv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
-    print("Chat Server started on port ", port)
 
-    srv.listen(5)
-
-    # User variables
-    incoming = [srv]
-    outgoing = []
-    message_queue = {}
-
-    connection, address = srv.accept()
-    with connection:
-        users += 1
-        printUserCount(users)
-
-        while True:
-            data = srv.recv(1024)
-            print("[", connection, "] ", str(data))
-            if not data:
-                users -= 1
-                printUserCount(users)
-            break
