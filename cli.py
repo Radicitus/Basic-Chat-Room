@@ -13,14 +13,20 @@ cli = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 cli.connect(cli_addr)
 
 while True:
-    sr, sw, se = select.select([sys.stdin, cli], [], [])
-    for s in sr:
-        if s is cli:
-            connection, address = s.accept()
-        else:
-            data = s.recv(1024)
-            if data:
-                print(str(data))
+    try:
+        sr, sw, se = select.select([sys.stdin, cli], [], [])
+        for s in sr:
+            if s is cli:
+                connection, address = s.accept()
+                print("connect")
+                data = s.recv(1024)
+                if data:
+                    print(str(data))
+                else:
+                    s.close()
             else:
-                connections.remove(s)
-                s.close()
+                cli.send(input().encode())
+    except KeyboardInterrupt:
+        print()
+        sys.exit()
+

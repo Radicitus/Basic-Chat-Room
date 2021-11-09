@@ -18,7 +18,9 @@ host, port = str(cli_args[1]), int(cli_args[2])
 srv_addr = (host, port)
 
 srv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+srv.setblocking(0)
 srv.bind(srv_addr)
+srv.listen(5)
 srv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
 print("Chat Server started on port", port)
@@ -27,22 +29,27 @@ print("Chat Server started on port", port)
 connections = [srv]
 
 while True:
-    sr, sw, se = select.select(connections, [], [])
-    print(sr)
-    for s in sr:
-        if s is srv:
-            connection, address = s.accept()
-            connections.append(connection)
-        else:
-            data = s.recv(1024)
-            if data:
-                for c in connections:
-                    if c is not srv and c is not s:
-                        message = "[" + str(s.getsockname()[0]) + ":" + str(s.getsockname[1]) + "] " + str(data)
-                        c.send(bytes(message))
+    try:
+        sr, sw, se = select.select(connections, [], [])
+        print(sr)
+        for s in sr:
+            if s is srv:
+                connection, address = s.accept()
+                connections.append(connection)
             else:
-                connections.remove(s)
-                s.close()
+                data = s.recv(1024)
+                print(data)
+                if data:
+                    for c in connections:
+                        if c is not srv and c is not s:
+                            message = "[" + str(s.getsockname()[0]) + ":" + str(s.getsockname[1]) + "] " + str(data)
+                            c.send(bytes(message))
+                else:
+                    connections.remove(s)
+                    s.close()
+    except KeyboardInterrupt:
+        print()
+        sys.exit()
 
 
 
