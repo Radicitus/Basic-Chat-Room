@@ -3,11 +3,25 @@ import socket
 import sys
 
 
-def printUserCount(c, cli):
-    if len(c) > 1:
-        print("> New user ", cli.getsockname(), "entered (", len(c), " users online)")
+def welcomeUserPrint(conn):
+    if len(conn - 1) > 1:
+        return "> Connected to the chat server (", len(conn - 1), " users online"
     else:
-        print("> New user ", cli.getsockname(), "entered (", len(c), " user online)")
+        return "> Connected to the chat server (", len(conn - 1), " user online"
+
+
+def newUserPrint(c, cli):
+    if len(c) > 1:
+        return "> New user ", cli, "entered (", len(c), " users online)"
+    else:
+        return "> New user ", cli, "entered (", len(c), " user online)"
+
+
+def leftUserPrint(c, cli):
+    if len(c) > 1:
+        return "< The user ", cli, "left (", len(c), " users online)"
+    else:
+        return "< The user ", cli, "left (", len(c), " user online)"
 
 
 # Take Host IP and Port # from cli arguments
@@ -36,6 +50,15 @@ while True:
             if s is srv:
                 connection, address = s.accept()
                 connections.append(connection)
+
+                # Send welcome message with user count
+                connection.send(welcomeUserPrint(connections).encode())
+
+                # Send user joined message with user count
+                for c in connections:
+                    if c is not srv and c is not s:
+                        ip, port = s.getsockname()[0], s.getsockname()[1]
+                        c.send(newUserPrint(str(ip) + ":" + str(port), connections).encode())
             else:
                 data = s.recv(1024)
                 print("rcv data: ", data)
@@ -46,6 +69,13 @@ while True:
                             message = "[" + str(ip) + ":" + str(port) + "] " + data.decode('ascii')
                             c.send(message.encode())
                 else:
+
+                    # Send user left message with user count
+                    for c in connections:
+                        if c is not srv and c is not s:
+                            ip, port = s.getsockname()[0], s.getsockname()[1]
+                            c.send(leftUserPrint(str(ip) + ":" + str(port), connections).encode())
+
                     connections.remove(s)
                     s.close()
     except Exception as e:

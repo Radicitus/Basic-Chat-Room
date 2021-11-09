@@ -14,7 +14,6 @@ cli.connect(cli_addr)
 
 while True:
     try:
-        print("start")
         sr, sw, se = select.select([sys.stdin, cli], [], [])
         for s in sr:
             print(s)
@@ -25,7 +24,8 @@ while True:
                 else:
                     s.close()
             else:
-                print("input")
+                message = input()
+                print("[You] ", message)
                 cli.send(input().encode())
     except Exception as e:
         print("PROGRAM EXIT: ", e)
