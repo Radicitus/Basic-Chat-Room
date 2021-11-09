@@ -14,20 +14,21 @@ cli.connect(cli_addr)
 
 while True:
     try:
+        print("start")
         sr, sw, se = select.select([sys.stdin, cli], [], [])
         for s in sr:
+            print(s)
             if s is cli:
-                connection, address = s.accept()
-                print("connect")
                 data = s.recv(1024)
                 if data:
-                    print(str(data))
+                    print(data.decode('ascii'))
                 else:
                     s.close()
             else:
+                print("input")
                 cli.send(input().encode())
-    except:
-        print("PROGRAM EXIT")
+    except Exception as e:
+        print("PROGRAM EXIT: ", e)
         cli.close()
         sys.exit()
 

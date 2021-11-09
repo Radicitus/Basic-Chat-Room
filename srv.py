@@ -40,18 +40,16 @@ while True:
                 data = s.recv(1024)
                 print("rcv data: ", data)
                 if data:
-                    print("if data")
                     for c in connections:
-                        print("If data: ", c)
                         if c is not srv and c is not s:
-                            print("Sockname: ", s.getsockname())
-                            message = "[" + str(s.getsockname()[0]) + ":" + str(s.getsockname[1]) + "] " + str(data)
+                            ip, port = s.getsockname()[0], s.getsockname()[1]
+                            message = "[" + str(ip) + ":" + str(port) + "] " + data.decode('ascii')
                             c.send(message.encode())
                 else:
                     connections.remove(s)
                     s.close()
-    except:
-        print("PROGRAM EXIT")
+    except Exception as e:
+        print("PROGRAM EXIT: ", e)
         srv.close()
         sys.exit()
 
