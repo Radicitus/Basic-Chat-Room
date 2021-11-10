@@ -24,10 +24,10 @@ while True:
                     s.close()
             else:
                 message = input()
-                print('\033[F', '[You] ', message, '\033[K')
+                print('\033[F' + '[You] ' + message)
                 cli.send(message.encode())
-    except Exception as e:
-        # print("PROGRAM EXIT: ", e)
+    except KeyboardInterrupt:
+        print("\nexit")
         cli.close()
         sys.exit()
 

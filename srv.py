@@ -37,7 +37,7 @@ srv.bind(srv_addr)
 srv.listen(5)
 srv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
-print("Chat Server started on port", port)
+print("Chat Server started on port " + str(port) + ".")
 
 # Client vars
 connections = [srv]
@@ -51,7 +51,7 @@ while True:
                 connections.append(connection)
 
                 # Server log user joined message with user count
-                ip, port = connection.getsockname()[0], connection.getsockname()[1]
+                ip, port = connection.getpeername()[0], connection.getpeername()[1]
                 print(newUserPrint(str(ip) + ":" + str(port), connections))
 
                 # Send welcome message with user count
@@ -60,33 +60,35 @@ while True:
                 # Send user joined message with user count
                 for c in connections:
                     if c is not srv and c is not connection:
-                        ip, port = s.getsockname()[0], s.getsockname()[1]
                         c.send(newUserPrint(str(ip) + ":" + str(port), connections).encode())
             else:
                 data = s.recv(1024)
                 if data:
-                    ip, port = s.getsockname()[0], s.getsockname()[1]
-                    print("[", ip, ":", port, "] ", data.decode('ascii'))
+                    ip, port = s.getpeername()[0], s.getpeername()[1]
+                    print("[" + str(ip) + ":" + str(port) + "] " + data.decode('ascii'))
                     for c in connections:
                         if c is not srv and c is not s:
-                            ip, port = s.getsockname()[0], s.getsockname()[1]
+                            ip, port = s.getpeername()[0], s.getpeername()[1]
                             message = "[" + str(ip) + ":" + str(port) + "] " + data.decode('ascii')
                             c.send(message.encode())
                 else:
 
+                    # Remove the disconnected client
+                    connections.remove(s)
+
                     # Server log user left message with user count
-                    ip, port = s.getsockname()[0], s.getsockname()[1]
+                    ip, port = s.getpeername()[0], s.getpeername()[1]
                     print(leftUserPrint(str(ip) + ":" + str(port), connections))
 
                     # Send user left message with user count
                     for c in connections:
                         if c is not srv and c is not s:
-                            ip, port = s.getsockname()[0], s.getsockname()[1]
+                            ip, port = s.getpeername()[0], s.getpeername()[1]
                             c.send(leftUserPrint(str(ip) + ":" + str(port), connections).encode())
 
-                    connections.remove(s)
+                    # Close the socket
                     s.close()
-    except Exception as e:
-        # print("PROGRAM EXIT: ", e)
+    except KeyboardInterrupt:
+        print("\nexit")
         srv.close()
         sys.exit()
