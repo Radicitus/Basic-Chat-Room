@@ -4,24 +4,24 @@ import sys
 
 
 def welcomeUserPrint(conn):
-    if len(conn - 1) > 1:
-        return "> Connected to the chat server (", len(conn - 1), " users online"
+    if len(conn) - 1 > 1:
+        return "> Connected to the chat server (" + str(len(conn) - 1) + " users online)"
     else:
-        return "> Connected to the chat server (", len(conn - 1), " user online"
+        return "> Connected to the chat server (" + str(len(conn) - 1) + " user online)"
 
 
-def newUserPrint(c, cli):
-    if len(c) > 1:
-        return "> New user ", cli, "entered (", len(c), " users online)"
+def newUserPrint(cli, c):
+    if len(c) - 1 > 1:
+        return "> New user " + cli + " entered (" + str(len(c) - 1) + " users online)"
     else:
-        return "> New user ", cli, "entered (", len(c), " user online)"
+        return "> New user " + cli + " entered (" + str(len(c) - 1) + " user online)"
 
 
-def leftUserPrint(c, cli):
-    if len(c) > 1:
-        return "< The user ", cli, "left (", len(c), " users online)"
+def leftUserPrint(cli, c):
+    if len(c) - 1 > 1:
+        return "< The user " + cli + " left (" + str(len(c) - 1) + " users online)"
     else:
-        return "< The user ", cli, "left (", len(c), " user online)"
+        return "< The user " + cli + " left (" + str(len(c) - 1) + " user online)"
 
 
 # Take Host IP and Port # from cli arguments
@@ -45,30 +45,38 @@ connections = [srv]
 while True:
     try:
         sr, sw, se = select.select(connections, [], [])
-        print(sr)
         for s in sr:
             if s is srv:
                 connection, address = s.accept()
                 connections.append(connection)
+
+                # Server log user joined message with user count
+                ip, port = connection.getsockname()[0], connection.getsockname()[1]
+                print(newUserPrint(str(ip) + ":" + str(port), connections))
 
                 # Send welcome message with user count
                 connection.send(welcomeUserPrint(connections).encode())
 
                 # Send user joined message with user count
                 for c in connections:
-                    if c is not srv and c is not s:
+                    if c is not srv and c is not connection:
                         ip, port = s.getsockname()[0], s.getsockname()[1]
                         c.send(newUserPrint(str(ip) + ":" + str(port), connections).encode())
             else:
                 data = s.recv(1024)
-                print("rcv data: ", data)
                 if data:
+                    ip, port = s.getsockname()[0], s.getsockname()[1]
+                    print("[", ip, ":", port, "] ", data.decode('ascii'))
                     for c in connections:
                         if c is not srv and c is not s:
                             ip, port = s.getsockname()[0], s.getsockname()[1]
                             message = "[" + str(ip) + ":" + str(port) + "] " + data.decode('ascii')
                             c.send(message.encode())
                 else:
+
+                    # Server log user left message with user count
+                    ip, port = s.getsockname()[0], s.getsockname()[1]
+                    print(leftUserPrint(str(ip) + ":" + str(port), connections))
 
                     # Send user left message with user count
                     for c in connections:
@@ -79,9 +87,6 @@ while True:
                     connections.remove(s)
                     s.close()
     except Exception as e:
-        print("PROGRAM EXIT: ", e)
+        # print("PROGRAM EXIT: ", e)
         srv.close()
         sys.exit()
-
-
-

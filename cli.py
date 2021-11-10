@@ -16,7 +16,6 @@ while True:
     try:
         sr, sw, se = select.select([sys.stdin, cli], [], [])
         for s in sr:
-            print(s)
             if s is cli:
                 data = s.recv(1024)
                 if data:
@@ -25,10 +24,10 @@ while True:
                     s.close()
             else:
                 message = input()
-                print("[You] ", message)
-                cli.send(input().encode())
+                print('\033[F', '[You] ', message, '\033[K')
+                cli.send(message.encode())
     except Exception as e:
-        print("PROGRAM EXIT: ", e)
+        # print("PROGRAM EXIT: ", e)
         cli.close()
         sys.exit()
 
